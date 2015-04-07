@@ -14,11 +14,13 @@ public class MatrixBoard {
 	private int countGames;
 	private int countWins;
 	private int countLoses;
-	
+
 	private static int amountWhites;
 	private static int amountBlacks;
 	private static int countFreeTurns;
-	private  static boolean white = true;
+	private static boolean afterHit = false;
+	private boolean white;
+	private static boolean staticWhite;
 	private static boolean terminal = false;
 	private static Stack<MatrixBoard> pastTurns;
 	// private boolean kings;
@@ -28,6 +30,7 @@ public class MatrixBoard {
 
 	public MatrixBoard(int[][] inBoard) {
 		board = arrayCopy(inBoard);
+		white = staticWhite;
 		// startBoardEight();
 	}
 
@@ -41,196 +44,48 @@ public class MatrixBoard {
 		amountBlacks = amountWhites;
 
 		pastTurns = new Stack<>();
-		
+
 		startBoardEight();
-		
+
+		white = false;
 		pastTurns.push(this);
 	}
 
 	private void startBoardEight() {
 		for (int i = 0; i < board.length; i++) {
 			for (int j = 0; j < board.length; j++) {
-				if (i < CT.SIZE_BOARD/2-1 && (i + j) % 2 != 0)
+				if (i < CT.SIZE_BOARD / 2 - 1 && (i + j) % 2 != 0)
 					board[i][j] = -1;
-				if (i > CT.SIZE_BOARD/2 && (i + j) % 2 != 0)
+				if (i > CT.SIZE_BOARD / 2 && (i + j) % 2 != 0)
 					board[i][j] = 1;
 			}
 		}
 	}
 
-	private void makeNextTurns() {
-
-		nextTurns = new ArrayList<>();
-		if (white == true) {
-			// check enemies
-			boolean shouldBeat = false;
+	private void makeWhiteTurns() {
+		staticWhite = true;
+		
+		if (!canMakeWhiteBeat()) {
 			for (int i = 0; i < board.length; i++) {
 				for (int j = 0; j < board.length; j++) {
 					if (board[i][j] > 0) {
 						int ai = i - 1;
 						int aj = j - 1;
 						if (inBounds(ai, aj))
-							if (board[ai][aj] < 0) {
-								if (inBounds(ai - 1, aj - 1))
-									if (board[ai - 1][aj - 1] == 0) {
-										shouldBeat = true;
-										nextTurns.add(new MatrixBoard(beatIJ(i,
-												j, ai, aj, ai - 1, aj - 1)));
-									}
+							if (board[ai][aj] == 0) {
+								nextTurns.add(new MatrixBoard(moveIJ(i, j, ai,
+										aj)));
+								System.out.println(pastTurns.peek());
 							}
 
 						int bi = i - 1;
 						int bj = j + 1;
 						if (inBounds(bi, bj))
-							if (board[bi][bj] < 0) {
-								if (inBounds(bi - 1, bj + 1))
-									if (board[bi - 1][bj + 1] == 0) {
-										shouldBeat = true;
-										nextTurns.add(new MatrixBoard(beatIJ(i,
-												j, bi, bj, bi - 1, bj + 1)));
-									}
+							if (board[bi][bj] == 0) {
+								nextTurns.add(new MatrixBoard(moveIJ(i, j, bi,
+										bj)));
 							}
 						if (board[i][j] == 2) {
-							int ci = i + 1;
-							int cj = j - 1;
-							if (inBounds(ci, cj))
-								if (board[ci][cj] < 0) {
-									if (inBounds(ci + 1, cj - 1))
-										if (board[ci + 1][cj - 1] == 0) {
-											shouldBeat = true;
-											nextTurns.add(new MatrixBoard(
-													beatIJ(i, j, ci, cj,
-															ci + 1, cj - 1)));
-										}
-								}
-
-							int di = i + 1;
-							int dj = j + 1;
-							if (inBounds(di, dj))
-								if (board[di][dj] < 0) {
-									if (inBounds(di + 1, dj + 1))
-										if (board[di + 1][dj + 1] == 0) {
-											shouldBeat = true;
-											nextTurns.add(new MatrixBoard(
-													beatIJ(i, j, di, dj,
-															di + 1, dj + 1)));
-										}
-								}
-
-						}
-
-					}
-				}
-			}
-
-			if (!shouldBeat) {
-				for (int i = 0; i < board.length; i++) {
-					for (int j = 0; j < board.length; j++) {
-						if (board[i][j] > 0 ) {
-							int ai = i - 1;
-							int aj = j - 1;
-							if (inBounds(ai, aj))
-								if (board[ai][aj] == 0) {
-									nextTurns.add(new MatrixBoard(moveIJ(i, j,
-											ai, aj)));
-									System.out.println(pastTurns.peek());
-								}
-
-							int bi = i - 1;
-							int bj = j + 1;
-							if (inBounds(bi, bj))
-								if (board[bi][bj] == 0) {
-									nextTurns.add(new MatrixBoard(moveIJ(i, j,
-											bi, bj)));
-								}
-							if (board[i][j] == 2) {
-								int ci = i + 1;
-								int cj = j - 1;
-								if (inBounds(ci, cj))
-									if (board[ci][cj] == 0) {
-										nextTurns.add(new MatrixBoard(moveIJ(i, j,
-												ci, cj)));
-
-									}
-
-								int di = i + 1;
-								int dj = j + 1;
-								if (inBounds(di, dj))
-									if (board[di][dj] == 0) {
-										nextTurns.add(new MatrixBoard(moveIJ(i, j,
-												di, dj)));
-									}
-
-							}
-						}
-					}
-				}
-				
-			}
-			white = false;
-		} else {
-			// check enemies
-			boolean shouldBeat = false;
-			for (int i = 0; i < board.length; i++) {
-				for (int j = 0; j < board.length; j++) {
-					if (board[i][j] < 0) {
-						int ci = i + 1;
-						int cj = j - 1;
-						if (inBounds(ci, cj))
-							if (board[ci][cj] > 0) {
-								if (inBounds(ci + 1, cj - 1))
-									if (board[ci + 1][cj - 1] == 0) {
-										shouldBeat = true;
-										nextTurns.add(new MatrixBoard(beatIJ(i,
-												j, ci, cj, ci + 1, cj - 1)));
-									}
-							}
-
-						int di = i + 1;
-						int dj = j + 1;
-						if (inBounds(di, dj))
-							if (board[di][dj] > 0) {
-								if (inBounds(di + 1, dj + 1))
-									if (board[di + 1][dj + 1] == 0) {
-										shouldBeat = true;
-										nextTurns.add(new MatrixBoard(beatIJ(i,
-												j, di, dj, di + 1, dj + 1)));
-									}
-							}
-						if (board[i][j] == -2) {
-							int ai = i - 1;
-							int aj = j - 1;
-							if (inBounds(ai, aj))
-								if (board[ai][aj] > 0) {
-									if (inBounds(ai - 1, aj - 1))
-										if (board[ai - 1][aj - 1] == 0) {
-											shouldBeat = true;
-											nextTurns.add(new MatrixBoard(beatIJ(i,
-													j, ai, aj, ai - 1, aj - 1)));
-										}
-								}
-
-							int bi = i - 1;
-							int bj = j + 1;
-							if (inBounds(bi, bj))
-								if (board[bi][bj] > 0) {
-									if (inBounds(bi - 1, bj + 1))
-										if (board[bi - 1][bj + 1] == 0) {
-											shouldBeat = true;
-											nextTurns.add(new MatrixBoard(beatIJ(i,
-													j, bi, bj, bi - 1, bj + 1)));
-										}
-								}
-
-						}
-					}
-				}
-			}
-
-			if (!shouldBeat) {
-				for (int i = 0; i < board.length; i++) {
-					for (int j = 0; j < board.length; j++) {
-						if (board[i][j] < 0 ) {
 							int ci = i + 1;
 							int cj = j - 1;
 							if (inBounds(ci, cj))
@@ -247,32 +102,212 @@ public class MatrixBoard {
 									nextTurns.add(new MatrixBoard(moveIJ(i, j,
 											di, dj)));
 								}
-							if (board[i][j] == -2) {
-								int ai = i - 1;
-								int aj = j - 1;
-								if (inBounds(ai, aj))
-									if (board[ai][aj] == 0) {
-										nextTurns.add(new MatrixBoard(moveIJ(i, j,
-												ai, aj)));
 
-									}
-
-								int bi = i - 1;
-								int bj = j + 1;
-								if (inBounds(bi, bj))
-									if (board[bi][bj] == 0) {
-										nextTurns.add(new MatrixBoard(moveIJ(i, j,
-												bi, bj)));
-									}
-							}
 						}
 					}
 				}
-				white = true;
 			}
 
 		}
+		
+	}
 
+	private void makeBlackTurns() {
+		staticWhite = false;
+		if (!canMakeBlackBeat()) {
+			for (int i = 0; i < board.length; i++) {
+				for (int j = 0; j < board.length; j++) {
+					if (board[i][j] < 0) {
+						int ci = i + 1;
+						int cj = j - 1;
+						if (inBounds(ci, cj))
+							if (board[ci][cj] == 0) {
+								nextTurns.add(new MatrixBoard(moveIJ(i, j, ci,
+										cj)));
+
+							}
+
+						int di = i + 1;
+						int dj = j + 1;
+						if (inBounds(di, dj))
+							if (board[di][dj] == 0) {
+								nextTurns.add(new MatrixBoard(moveIJ(i, j, di,
+										dj)));
+							}
+						if (board[i][j] == -2) {
+							int ai = i - 1;
+							int aj = j - 1;
+							if (inBounds(ai, aj))
+								if (board[ai][aj] == 0) {
+									nextTurns.add(new MatrixBoard(moveIJ(i, j,
+											ai, aj)));
+
+								}
+
+							int bi = i - 1;
+							int bj = j + 1;
+							if (inBounds(bi, bj))
+								if (board[bi][bj] == 0) {
+									nextTurns.add(new MatrixBoard(moveIJ(i, j,
+											bi, bj)));
+								}
+						}
+					}
+				}
+			}
+		}
+		
+	}
+
+	private boolean canMakeWhiteBeat() {
+		boolean shouldBeat = false;
+		for (int i = 0; i < board.length; i++) {
+			for (int j = 0; j < board.length; j++) {
+				if (board[i][j] > 0) {
+					int ai = i - 1;
+					int aj = j - 1;
+					if (inBounds(ai, aj))
+						if (board[ai][aj] < 0) {
+							if (inBounds(ai - 1, aj - 1))
+								if (board[ai - 1][aj - 1] == 0) {
+									shouldBeat = true;
+									nextTurns.add(new MatrixBoard(beatIJ(i, j,
+											ai, aj, ai - 1, aj - 1)));
+								}
+						}
+
+					int bi = i - 1;
+					int bj = j + 1;
+					if (inBounds(bi, bj))
+						if (board[bi][bj] < 0) {
+							if (inBounds(bi - 1, bj + 1))
+								if (board[bi - 1][bj + 1] == 0) {
+									shouldBeat = true;
+									nextTurns.add(new MatrixBoard(beatIJ(i, j,
+											bi, bj, bi - 1, bj + 1)));
+								}
+						}
+					if (board[i][j] == 2) {
+						int ci = i + 1;
+						int cj = j - 1;
+						if (inBounds(ci, cj))
+							if (board[ci][cj] < 0) {
+								if (inBounds(ci + 1, cj - 1))
+									if (board[ci + 1][cj - 1] == 0) {
+										shouldBeat = true;
+										nextTurns.add(new MatrixBoard(beatIJ(i,
+												j, ci, cj, ci + 1, cj - 1)));
+									}
+							}
+
+						int di = i + 1;
+						int dj = j + 1;
+						if (inBounds(di, dj))
+							if (board[di][dj] < 0) {
+								if (inBounds(di + 1, dj + 1))
+									if (board[di + 1][dj + 1] == 0) {
+										shouldBeat = true;
+										nextTurns.add(new MatrixBoard(beatIJ(i,
+												j, di, dj, di + 1, dj + 1)));
+									}
+							}
+
+					}
+
+				}
+			}
+		}
+		return shouldBeat;
+	}
+
+	private boolean canMakeBlackBeat() {
+		boolean shouldBeat = false;
+		for (int i = 0; i < board.length; i++) {
+			for (int j = 0; j < board.length; j++) {
+				if (board[i][j] < 0) {
+					int ci = i + 1;
+					int cj = j - 1;
+					if (inBounds(ci, cj))
+						if (board[ci][cj] > 0) {
+							if (inBounds(ci + 1, cj - 1))
+								if (board[ci + 1][cj - 1] == 0) {
+									shouldBeat = true;
+									nextTurns.add(new MatrixBoard(beatIJ(i, j,
+											ci, cj, ci + 1, cj - 1)));
+								}
+						}
+
+					int di = i + 1;
+					int dj = j + 1;
+					if (inBounds(di, dj))
+						if (board[di][dj] > 0) {
+							if (inBounds(di + 1, dj + 1))
+								if (board[di + 1][dj + 1] == 0) {
+									shouldBeat = true;
+									nextTurns.add(new MatrixBoard(beatIJ(i, j,
+											di, dj, di + 1, dj + 1)));
+								}
+						}
+					if (board[i][j] == -2) {
+						int ai = i - 1;
+						int aj = j - 1;
+						if (inBounds(ai, aj))
+							if (board[ai][aj] > 0) {
+								if (inBounds(ai - 1, aj - 1))
+									if (board[ai - 1][aj - 1] == 0) {
+										shouldBeat = true;
+										nextTurns.add(new MatrixBoard(beatIJ(i,
+												j, ai, aj, ai - 1, aj - 1)));
+									}
+							}
+
+						int bi = i - 1;
+						int bj = j + 1;
+						if (inBounds(bi, bj))
+							if (board[bi][bj] > 0) {
+								if (inBounds(bi - 1, bj + 1))
+									if (board[bi - 1][bj + 1] == 0) {
+										shouldBeat = true;
+										nextTurns.add(new MatrixBoard(beatIJ(i,
+												j, bi, bj, bi - 1, bj + 1)));
+									}
+							}
+
+					}
+				}
+			}
+		}
+		return shouldBeat;
+	}
+
+	private void makeNextTurns() {
+		this.white = pastTurns.peek().white;
+
+		nextTurns = new ArrayList<>();
+
+		if (afterHit) {
+			if (white == true) {
+				if (!canMakeWhiteBeat()) {
+					afterHit = false;
+					staticWhite = false;
+					//makeBlackTurns();
+				}
+
+			} else {
+				if (!canMakeBlackBeat()) {
+					afterHit = false;
+					staticWhite = true;
+					//makeWhiteTurns();
+
+				}
+			}
+		}
+		if (!afterHit){
+			if (!white)
+				makeWhiteTurns();
+			 else 
+				 makeBlackTurns();
+		}
 	}
 
 	public int[][] getNextMoveTable() {
@@ -287,11 +322,11 @@ public class MatrixBoard {
 			makeNextTurns();
 		MatrixBoard turn = nextTurns.get(getBestMove());
 		pastTurns.push(turn);
-	
+
 		return turn;
 
 	}
-	
+
 	private int getBestMove() {
 
 		if (nextTurns != null) {
@@ -319,7 +354,7 @@ public class MatrixBoard {
 		// make king
 		if (temp == 1 && ti == 0)
 			res[ti][tj] = 2;
-		else if (temp == -1 && ti == CT.SIZE_BOARD-1)
+		else if (temp == -1 && ti == CT.SIZE_BOARD - 1)
 			res[ti][tj] = -2;
 		else
 			res[ti][tj] = temp;
@@ -335,7 +370,7 @@ public class MatrixBoard {
 		// make king
 		if (temp == 1 && ti == 0)
 			res[ti][tj] = 2;
-		else if (temp == -1 && ti == CT.SIZE_BOARD-1)
+		else if (temp == -1 && ti == CT.SIZE_BOARD - 1)
 			res[ti][tj] = -2;
 		else
 			res[ti][tj] = temp;
@@ -347,6 +382,7 @@ public class MatrixBoard {
 
 		res[mi][mj] = 0;
 
+		afterHit = true;
 		return res;
 	}
 
@@ -378,6 +414,7 @@ public class MatrixBoard {
 	@Override
 	public String toString() {
 		String ss = "Move#" + countTurns;
+		ss += "\nWHITE: " + white;
 		ss += "\nG: " + countGames;
 		ss += "\nW: " + countWins;
 		ss += "\nL: " + countLoses;

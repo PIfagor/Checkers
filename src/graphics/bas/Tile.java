@@ -25,6 +25,9 @@ public class Tile  extends JPanel implements MouseListener {
 	private BufferedImage black;
 	private BufferedImage whiteKing;
 	private BufferedImage blackKing;
+	private BufferedImage possMove;
+	private BufferedImage enemyTile;
+	private BufferedImage currentTile;
 	private static  MatrixBoard board;
 	private int I;
 	private int J;
@@ -48,6 +51,10 @@ public class Tile  extends JPanel implements MouseListener {
 			black = ImageIO.read(new File("resoursec/img/black.png"));
 			whiteKing = ImageIO.read(new File("resoursec/img/whiteKing.png"));
 			blackKing = ImageIO.read(new File("resoursec/img/blackKing.png"));
+			possMove = ImageIO.read(new File("resoursec/img/poss_move.png"));
+			enemyTile = ImageIO.read(new File("resoursec/img/enemy.png"));
+			currentTile = ImageIO.read(new File("resoursec/img/me.png"));
+			
 	       } catch (IOException ex) {
 	            // handle exception...
 	       }
@@ -75,17 +82,19 @@ public class Tile  extends JPanel implements MouseListener {
 	
 		@Override
 	    protected void paintComponent(Graphics g) {
+			
 	        super.paintComponent(g);
 	        if(board.BOARD()[I][J]==1)
-	        	g.drawImage(white, 0, 0, null);
+	        	g.drawImage(white, 0, 0, this.getWidth(),this.getHeight(),this);
 	        else if(board.BOARD()[I][J]==-1)
-	        	g.drawImage(black, 0, 0, null);  
+	        	g.drawImage(black, 0, 0, this.getWidth(),this.getHeight(),this); 
 	        if(board.BOARD()[I][J]==2)
-	        	g.drawImage(whiteKing, 0, 0, null);
+	        	g.drawImage(whiteKing, 0, 0, this.getWidth(),this.getHeight(),this);
 	        else if(board.BOARD()[I][J]==-2)
-	        	g.drawImage(blackKing, 0, 0, null);  
+	        	g.drawImage(blackKing, 0, 0, this.getWidth(),this.getHeight(),this);
 	        else if(board.BOARD()[I][J]==0)
-	        	g.drawImage(null, 0, 0, null); 
+	        	g.drawImage(null, 0, 0, this.getWidth(),this.getHeight(),this);
+	      
 	    }
 
 		public  void makeBlackAndWhite()
@@ -154,14 +163,15 @@ public class Tile  extends JPanel implements MouseListener {
 			
 			//System.out.println(board.getNextMove());
 			
-			System.out.println();
+			//System.out.println();
 			//board.showNextMove();
 			if (!check)
 			{
 				check=true;
 				tempI=I;
 				tempJ=J;
-				this.setBackground(CS.LIME);
+				//this.setBackground(CS.LIME);
+				//this.drawImage(blackKing, 0, 0, null);  
 				showPosibleMove();
 				
 				

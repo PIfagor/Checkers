@@ -42,7 +42,7 @@ public class Runer extends JFrame {
 	
 	private void initStandartDemision()
 	{
-		setSize(new Dimension(800, 880));
+		setSize(new Dimension(820, 870));
 		setResizable(false);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 	
