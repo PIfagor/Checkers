@@ -16,6 +16,7 @@ import javax.swing.border.EmptyBorder;
 
 import constant.CS;
 import constant.CT;
+import constant.Side;
 import controler.MatrixBoard;
 
 public class Tile  extends JPanel implements MouseListener {
@@ -103,36 +104,49 @@ public class Tile  extends JPanel implements MouseListener {
 			
 				if (aj<CT.SIZE_BOARD&&ai>0&&board.BOARD()[ai][aj]==-1){
 					this.getParent().getComponents()[fXYtID(ai,aj)].setBackground(CS.MAROON);
-					showPosibleMove( ai, aj);
+					showPosibleMove( ai, aj, Side.UPRIGTH);
 				}
 				
 				if (bj<CT.SIZE_BOARD&&bi>0&&board.BOARD()[bi][bj]==-1){
 					this.getParent().getComponents()[fXYtID(bi,bj)].setBackground(CS.MAROON);
-					showPosibleMove( bi, bj);
+					showPosibleMove( bi, bj,Side.UPLEFT);
 				}
 				
 				if (ai<CT.SIZE_BOARD&&aj>0&&board.BOARD()[ai][aj]==0)
 					this.getParent().getComponents()[fXYtID(ai,aj)].setBackground(CS.GOLD);
 				if (bi<CT.SIZE_BOARD&&bj>0&&board.BOARD()[bi][bj]==0)//
-					this.getParent().getComponents()[fXYtID(bi,bj)].setBackground(CS.GOLD);
+					this.getParent().getComponents()[fXYtID(bi,bj)].setBackground(CS.GREY );
 			
 			
 		}
-		private void showPosibleMove(int i, int j)
+		private void showPosibleMove(int i, int j, Side s )
 		{
-			int ai = i-1;
-			int aj = j+1;
+			if (s == Side.UPRIGTH)
+			{
+				int ai = i-1;
+				int aj = j+1;
+
+				if (aj<CT.SIZE_BOARD&&ai>0&&board.BOARD()[ai][aj]==0)//
+					this.getParent().getComponents()[fXYtID(ai,aj)].setBackground(CS.GOLD);
+			} else if (s == Side.UPLEFT)
+			{
+				int bi = i-1;
+				int bj = j-1;
+				
+				if (bj<CT.SIZE_BOARD&&bi>0&&board.BOARD()[bi][bj]==0)//
+					this.getParent().getComponents()[fXYtID(bi,bj)].setBackground(CS.GOLD);
+			}
 			
-			int bi = i-1;
-			int bj = j-1;
 			
-			if (aj<CT.SIZE_BOARD&&ai>0&&board.BOARD()[ai][aj]==0)//
-				this.getParent().getComponents()[fXYtID(ai,aj)].setBackground(CS.GOLD);
-			if (bj<CT.SIZE_BOARD&&bi>0&&board.BOARD()[bi][bj]==0)//
-				this.getParent().getComponents()[fXYtID(bi,bj)].setBackground(CS.GOLD);
+		
+			
 		}
 		@Override
 		public void mousePressed(MouseEvent arg0) {
+			
+			System.out.println(board.getNextMove());
+			System.out.println();
+			board.showNextMove();
 			if (!check)
 			{
 				check=true;
