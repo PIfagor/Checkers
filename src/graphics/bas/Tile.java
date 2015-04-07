@@ -23,6 +23,8 @@ public class Tile  extends JPanel implements MouseListener {
 	
 	private BufferedImage white;
 	private BufferedImage black;
+	private BufferedImage whiteKing;
+	private BufferedImage blackKing;
 	private static  MatrixBoard board;
 	private int I;
 	private int J;
@@ -44,6 +46,8 @@ public class Tile  extends JPanel implements MouseListener {
 		try {                
 			white = ImageIO.read(new File("resoursec/img/white.png"));
 			black = ImageIO.read(new File("resoursec/img/black.png"));
+			whiteKing = ImageIO.read(new File("resoursec/img/whiteKing.png"));
+			blackKing = ImageIO.read(new File("resoursec/img/blackKing.png"));
 	       } catch (IOException ex) {
 	            // handle exception...
 	       }
@@ -75,7 +79,11 @@ public class Tile  extends JPanel implements MouseListener {
 	        if(board.BOARD()[I][J]==1)
 	        	g.drawImage(white, 0, 0, null);
 	        else if(board.BOARD()[I][J]==-1)
-	        	g.drawImage(black, 0, 0, null);    
+	        	g.drawImage(black, 0, 0, null);  
+	        if(board.BOARD()[I][J]==2)
+	        	g.drawImage(whiteKing, 0, 0, null);
+	        else if(board.BOARD()[I][J]==-2)
+	        	g.drawImage(blackKing, 0, 0, null);  
 	        else if(board.BOARD()[I][J]==0)
 	        	g.drawImage(null, 0, 0, null); 
 	    }
@@ -144,9 +152,10 @@ public class Tile  extends JPanel implements MouseListener {
 		@Override
 		public void mousePressed(MouseEvent arg0) {
 			
-			System.out.println(board.getNextMove());
+			//System.out.println(board.getNextMove());
+			
 			System.out.println();
-			board.showNextMove();
+			//board.showNextMove();
 			if (!check)
 			{
 				check=true;
@@ -168,7 +177,9 @@ public class Tile  extends JPanel implements MouseListener {
 				((Tile) this.getParent().getComponents()[fXYtID(tempI,tempJ)]).makeBlackAndWhite();
 				makeBlackAndWhite();
 			}
+			
 			this.getParent().repaint();
+			board = board.getNextTurn();
 			//re
 		}
 
