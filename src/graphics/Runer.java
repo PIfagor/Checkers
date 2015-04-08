@@ -6,7 +6,11 @@ import graphics.bas.Tile;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -14,6 +18,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 
 import javax.swing.*;
@@ -82,9 +87,18 @@ public class Runer extends JFrame {
 		if (state) 
 		{
 			ObjectOutputStream out = null;
-	         out = new ObjectOutputStream(new FileOutputStream(fileName));
-	         out.writeObject(temp);
-	         out.close();
+				         out = new ObjectOutputStream(new FileOutputStream(fileName));
+				         out.writeObject(temp);
+				         out.close();
+//			   ObjectOutputStream out = null;
+//	           ByteArrayOutputStream bos = new ByteArrayOutputStream();
+//	           out = new ObjectOutputStream(bos);   
+//	           out.writeObject(temp);
+//	           byte[] data = bos.toByteArray();
+//	           BufferedOutputStream boss = new BufferedOutputStream(new FileOutputStream(fileName),1024);
+//	           boss.write(data);
+//	           out.close();
+//	           boss.close();
 		}
 
 	}
@@ -94,19 +108,29 @@ public class Runer extends JFrame {
 		//MatrixBoard root = new MatrixBoard();
 		//MatrixBoard temp = root;
 		 
-		String fileNamString = "xxx7k40bN.txt";
+		String fileNamString = "zzz10k.txt";
 		MatrixBoard temp  = new MatrixBoard();
 		boolean inFile = false;
-		boolean outFile = true;
+		boolean outFile = false;
 		
-		inInint(temp,inFile,fileNamString);
+		//inInint(temp,inFile,fileNamString);
 		
+		long start = System.nanoTime();
+		temp = temp.readFromeFile(temp,
+	                new DataInputStream(
+	                new FileInputStream(fileNamString)));
+		temp.initBoard(temp);
+		outInit(temp,outFile,fileNamString);
+		
+		long end = System.nanoTime();
+		long time =  (end -start)/1000000; 
+        System.out.println("END OF READ: "+time);
 			
 	     
 	     
 	     System.out.println(temp);
 	      
-		for (int i = 0; i < 7000; i++) {
+		for (int i = 0; i < 10000; i++) {
 			while (temp.endGame()==0) {
 				temp = temp.getNextTurn();
 				//System.out.println(temp);
@@ -117,11 +141,17 @@ public class Runer extends JFrame {
 	
 			
 		}
-		temp.showNextMove();
+		System.out.println("______________________________________________");
 		System.out.println(temp);
-         
-		outInit(temp,outFile,fileNamString);
-          System.out.println("END OF TIME");
+		temp.showNextMove();
+		 start = System.nanoTime();
+		 temp.writeToFile(temp,
+	                new DataOutputStream(
+	                new FileOutputStream(fileNamString)));
+		 outInit(temp,outFile,fileNamString);
+		 end = System.nanoTime();
+		 time =  (end -start)/1000; 
+          System.out.println("END OF TIME: "+time);
           
           
 	}

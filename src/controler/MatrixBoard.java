@@ -1,5 +1,8 @@
 package controler;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -71,6 +74,156 @@ public class MatrixBoard implements Serializable {
 		countFreeTurns = 0;
 		pastTurns.push(root);
 		return root;
+	}
+
+	public byte[][] getNextMoveTable() {
+		if (nextTurns == null)
+			makeNextTurns();
+		return nextTurns.get(getBestMove()).BOARD();
+
+	}
+
+	public MatrixBoard getNextTurn() {
+		if (nextTurns == null)
+			makeNextTurns();
+
+		countTurns++;
+		MatrixBoard turn = nextTurns.get(getBestMove());
+		pastTurns.push(turn);
+		countFreeTurns++;
+		return turn;
+
+	}
+
+	public int endGame() {
+		if (nextTurns == null)
+			makeNextTurns();
+
+		if (countFreeTurns == CT.FREE_MOVES)
+			terminal = -1; // draw
+		if (nextTurns.size() == 0)
+			terminal = -2;
+
+		if (terminal < 0) {
+			// System.out.println(white);
+			if (terminal == -1) {
+				while (!pastTurns.empty()) {
+					MatrixBoard temp = pastTurns.pop();
+					temp.countGames++;
+
+					if (temp.countMoves == 0)
+						root = temp;
+					// System.out.println(temp);
+				}
+			}
+			if (terminal == -2) {
+				while (!pastTurns.empty()) {
+					MatrixBoard temp = pastTurns.pop();
+					if (white) {
+						if (temp.white)
+							temp.countLoses++;
+						else
+							temp.countWins++;
+
+					} else {
+						if (!temp.white)
+							temp.countLoses++;
+						else
+							temp.countWins++;
+					}
+					temp.countGames++;
+					if (temp.countMoves == 0)
+						root = temp;
+					// System.out.println(temp);
+				}
+			}
+			// for (MatrixBoard mb : pastTurns) {
+			// System.out.println("---------------------");
+			// System.out.println(mb);
+			// System.out.println("---------------------");
+			// }
+		}
+		return terminal;
+	}
+
+	public void startGame() {
+		startBoardEight();
+	}
+
+	private byte[] toOneArray(byte[][] inBoard) {
+		int N = CT.SIZE_BOARD;
+		byte[] res = new byte[N * N];
+		for (int i = 0; i < inBoard.length; i++) {
+			for (int j = 0; j < inBoard.length; j++) {
+				res[i * N + j] = inBoard[i][j];
+			}
+		}
+		return res;
+	}
+
+	private byte[][] toTwoAray(byte[] inRow) {
+		int N = CT.SIZE_BOARD;
+		byte[][] res = new byte[N][N];
+		for (int i = 0; i < res.length; i++) {
+			for (int j = 0; j < res.length; j++) {
+				res[i][j] = inRow[i * N + j];
+			}
+		}
+		return res;
+	}
+
+	public void writeToFile(MatrixBoard mb, DataOutputStream out)
+			throws IOException {
+		int games = mb.countGames;
+		out.writeInt(games);
+		int wins = mb.countWins;
+		out.writeInt(wins);
+		int loss = mb.countLoses;
+		out.writeInt(loss);
+		byte[][] board = mb.board;
+		out.write(toOneArray(board));
+		int amountChildrens = 0;
+
+		if (mb.nextTurns != null) {
+			amountChildrens = mb.nextTurns.size();
+			// System.out.print("*"+amountChildrens+ "*");
+			out.writeInt(amountChildrens);
+			for (MatrixBoard nt : mb.nextTurns) {
+				writeToFile(nt, out);
+			}
+			
+		} else {
+			// System.out.print("|"+amountChildrens+"|");
+			out.writeInt(amountChildrens);
+		}
+
+	}
+
+	public MatrixBoard readFromeFile(MatrixBoard mb, DataInputStream in)
+			throws IOException {
+		int N = CT.SIZE_BOARD;
+		int g = in.readInt();
+		mb.countGames = g;
+		int w = in.readInt();
+		mb.countWins = w;
+		int l = in.readInt();
+		mb.countLoses = l;
+		byte[] row = new byte[N * N];
+		in.read(row);
+		mb.board = toTwoAray(row);
+		int childrens = in.readInt();
+		//System.out.println(childrens);
+		if (childrens != 0) {
+			mb.nextTurns = new ArrayList<>();
+			for (int i = 0; i < childrens; i++) {
+				mb.nextTurns.add(readFromeFile(new MatrixBoard(), in));
+			}
+		}
+
+		else
+			mb.nextTurns = null;
+		return mb;
+
 	}
 
 	private void startBoardEight() {
@@ -330,80 +483,6 @@ public class MatrixBoard implements Serializable {
 			else
 				makeBlackTurns();
 		}
-	}
-
-	public byte[][] getNextMoveTable() {
-		if (nextTurns == null)
-			makeNextTurns();
-		return nextTurns.get(getBestMove()).BOARD();
-
-	}
-
-	public MatrixBoard getNextTurn() {
-		if (nextTurns == null)
-			makeNextTurns();
-
-		countTurns++;
-		MatrixBoard turn = nextTurns.get(getBestMove());
-		pastTurns.push(turn);
-		countFreeTurns++;
-		return turn;
-
-	}
-
-	public int endGame() {
-		if (nextTurns == null)
-			makeNextTurns();
-
-		if (countFreeTurns == CT.FREE_MOVES)
-			terminal = -1; // draw
-		if (nextTurns.size() == 0)
-			terminal = -2;
-
-		if (terminal < 0) {
-			// System.out.println(white);
-			if (terminal == -1) {
-				while (!pastTurns.empty()) {
-					MatrixBoard temp = pastTurns.pop();
-					temp.countGames++;
-
-					if (temp.countMoves == 0)
-						root = temp;
-					// System.out.println(temp);
-				}
-			}
-			if (terminal == -2) {
-				while (!pastTurns.empty()) {
-					MatrixBoard temp = pastTurns.pop();
-					if (white) {
-						if (temp.white)
-							temp.countLoses++;
-						else
-							temp.countWins++;
-
-					} else {
-						if (!temp.white)
-							temp.countLoses++;
-						else
-							temp.countWins++;
-					}
-					temp.countGames++;
-					if (temp.countMoves == 0)
-						root = temp;
-					// System.out.println(temp);
-				}
-			}
-			// for (MatrixBoard mb : pastTurns) {
-			// System.out.println("---------------------");
-			// System.out.println(mb);
-			// System.out.println("---------------------");
-			// }
-		}
-		return terminal;
-	}
-
-	public void startGame() {
-		startBoardEight();
 	}
 
 	private int getBestMove() {
