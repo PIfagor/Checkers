@@ -10,7 +10,7 @@ import constant.CT;
 
 public class MatrixBoard implements Serializable {
 
-	private int[][] board;
+	private byte[][] board;
 
 	private int countGames;
 	private int countWins;
@@ -32,8 +32,8 @@ public class MatrixBoard implements Serializable {
 	private ArrayList<MatrixBoard> nextTurns;
 	private static MatrixBoard root;
 
-	public MatrixBoard(int[][] inBoard) {
-		board = arrayCopy(inBoard);
+	public MatrixBoard(byte[][] inBoard) {
+		board = inBoard;
 		white = staticWhite;
 		countMoves = countTurns;
 		// startBoardEight();
@@ -42,7 +42,7 @@ public class MatrixBoard implements Serializable {
 	public MatrixBoard() {
 		int N = CT.SIZE_BOARD;
 
-		board = new int[N][N];
+		board = new byte[N][N];
 
 		N /= 2;
 		// amountWhites = N * (N - 1);
@@ -332,7 +332,7 @@ public class MatrixBoard implements Serializable {
 		}
 	}
 
-	public int[][] getNextMoveTable() {
+	public byte[][] getNextMoveTable() {
 		if (nextTurns == null)
 			makeNextTurns();
 		return nextTurns.get(getBestMove()).BOARD();
@@ -419,9 +419,9 @@ public class MatrixBoard implements Serializable {
 		return randInt;
 	}
 
-	private int[][] moveIJ(int fi, int fj, int ti, int tj) {
-		int[][] res = arrayCopy(board);
-		int temp = res[fi][fj];
+	private byte[][] moveIJ(int fi, int fj, int ti, int tj) {
+		byte[][] res = arrayCopy(board);
+		byte temp = res[fi][fj];
 		res[fi][fj] = res[ti][tj];
 
 		// make king
@@ -435,11 +435,11 @@ public class MatrixBoard implements Serializable {
 		return res;
 	}
 
-	private int[][] beatIJ(int fi, int fj, int mi, int mj, int ti, int tj) {
+	private byte[][] beatIJ(int fi, int fj, int mi, int mj, int ti, int tj) {
 		// countTurns++;
 		countFreeTurns = 0;
-		int[][] res = arrayCopy(board);
-		int temp = res[fi][fj];
+		byte[][] res = arrayCopy(board);
+		byte temp = res[fi][fj];
 		res[fi][fj] = res[ti][tj];
 
 		// make king
@@ -461,7 +461,7 @@ public class MatrixBoard implements Serializable {
 		return res;
 	}
 
-	public int[][] BOARD() {
+	public byte[][] BOARD() {
 		return board;
 	}
 
@@ -471,9 +471,9 @@ public class MatrixBoard implements Serializable {
 		return true;
 	}
 
-	private int[][] arrayCopy(int[][] inBoard) {
+	private byte[][] arrayCopy(byte[][] inBoard) {
 		int N = CT.SIZE_BOARD;
-		int[][] result = new int[N][N];
+		byte[][] result = new byte[N][N];
 		for (int i = 0; i < inBoard.length; i++)
 			for (int j = 0; j < inBoard.length; j++)
 				result[i][j] = inBoard[i][j];

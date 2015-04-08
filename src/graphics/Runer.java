@@ -94,7 +94,7 @@ public class Runer extends JFrame {
 		//MatrixBoard root = new MatrixBoard();
 		//MatrixBoard temp = root;
 		 
-		String fileNamString = "xxx7k40.txt";
+		String fileNamString = "xxx7k40bN.txt";
 		MatrixBoard temp  = new MatrixBoard();
 		boolean inFile = false;
 		boolean outFile = true;

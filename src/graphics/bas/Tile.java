@@ -180,8 +180,8 @@ public class Tile  extends JPanel implements MouseListener {
 				check=false;
 				int i = I;
 				int j = J;
-				int t = board.BOARD()[tempI][tempJ];
-				int t2 =  board.BOARD()[i][j];
+				byte t = board.BOARD()[tempI][tempJ];
+				byte t2 =  board.BOARD()[i][j];
 				board.BOARD()[I][J]= t;
 				board.BOARD()[tempI][tempJ]=t2;
 				((Tile) this.getParent().getComponents()[fXYtID(tempI,tempJ)]).makeBlackAndWhite();
