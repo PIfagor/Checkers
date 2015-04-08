@@ -1,5 +1,6 @@
 package controler;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
@@ -7,7 +8,7 @@ import java.util.Stack;
 
 import constant.CT;
 
-public class MatrixBoard {
+public class MatrixBoard implements Serializable {
 
 	private int[][] board;
 
@@ -15,22 +16,26 @@ public class MatrixBoard {
 	private int countWins;
 	private int countLoses;
 
-	private static int amountWhites;
-	private static int amountBlacks;
+	// private static int amountWhites;
+	// private static int amountBlacks;
 	private static int countFreeTurns;
+
 	private static boolean afterHit = false;
 	private boolean white;
 	private static boolean staticWhite;
-	private static boolean terminal = false;
+	private static int terminal = 0;
 	private static Stack<MatrixBoard> pastTurns;
 	// private boolean kings;
-	private int countTurns;
+	private static int countTurns;
+	private int countMoves;
 	private Random rand = new Random();
 	private ArrayList<MatrixBoard> nextTurns;
+	private static MatrixBoard root;
 
 	public MatrixBoard(int[][] inBoard) {
 		board = arrayCopy(inBoard);
 		white = staticWhite;
+		countMoves = countTurns;
 		// startBoardEight();
 	}
 
@@ -40,15 +45,32 @@ public class MatrixBoard {
 		board = new int[N][N];
 
 		N /= 2;
-		amountWhites = N * (N - 1);
-		amountBlacks = amountWhites;
+		// amountWhites = N * (N - 1);
+		// amountBlacks = amountWhites;
 
 		pastTurns = new Stack<>();
 
 		startBoardEight();
 
 		white = false;
-		pastTurns.push(this);
+		// pastTurns.push(this);
+		// root=this;
+	}
+
+	public void initBoard(MatrixBoard in) {
+		root = in;
+		pastTurns.push(in);
+		countGames = in.countGames;
+		countWins = in.countWins;
+		countLoses = in.countLoses;
+		nextTurns = in.nextTurns;
+	}
+
+	public MatrixBoard getRoot() {
+		terminal = 0;
+		countFreeTurns = 0;
+		pastTurns.push(root);
+		return root;
 	}
 
 	private void startBoardEight() {
@@ -64,7 +86,7 @@ public class MatrixBoard {
 
 	private void makeWhiteTurns() {
 		staticWhite = true;
-		
+
 		if (!canMakeWhiteBeat()) {
 			for (int i = 0; i < board.length; i++) {
 				for (int j = 0; j < board.length; j++) {
@@ -75,7 +97,7 @@ public class MatrixBoard {
 							if (board[ai][aj] == 0) {
 								nextTurns.add(new MatrixBoard(moveIJ(i, j, ai,
 										aj)));
-								System.out.println(pastTurns.peek());
+								// System.out.println(pastTurns.peek());
 							}
 
 						int bi = i - 1;
@@ -109,7 +131,7 @@ public class MatrixBoard {
 			}
 
 		}
-		
+
 	}
 
 	private void makeBlackTurns() {
@@ -156,7 +178,7 @@ public class MatrixBoard {
 				}
 			}
 		}
-		
+
 	}
 
 	private boolean canMakeWhiteBeat() {
@@ -290,23 +312,23 @@ public class MatrixBoard {
 				if (!canMakeWhiteBeat()) {
 					afterHit = false;
 					staticWhite = false;
-					//makeBlackTurns();
+					// makeBlackTurns();
 				}
 
 			} else {
 				if (!canMakeBlackBeat()) {
 					afterHit = false;
 					staticWhite = true;
-					//makeWhiteTurns();
+					// makeWhiteTurns();
 
 				}
 			}
 		}
-		if (!afterHit){
+		if (!afterHit) {
 			if (!white)
 				makeWhiteTurns();
-			 else 
-				 makeBlackTurns();
+			else
+				makeBlackTurns();
 		}
 	}
 
@@ -320,11 +342,68 @@ public class MatrixBoard {
 	public MatrixBoard getNextTurn() {
 		if (nextTurns == null)
 			makeNextTurns();
+
+		countTurns++;
 		MatrixBoard turn = nextTurns.get(getBestMove());
 		pastTurns.push(turn);
-
+		countFreeTurns++;
 		return turn;
 
+	}
+
+	public int endGame() {
+		if (nextTurns == null)
+			makeNextTurns();
+
+		if (countFreeTurns == CT.FREE_MOVES)
+			terminal = -1; // draw
+		if (nextTurns.size() == 0)
+			terminal = -2;
+
+		if (terminal < 0) {
+			// System.out.println(white);
+			if (terminal == -1) {
+				while (!pastTurns.empty()) {
+					MatrixBoard temp = pastTurns.pop();
+					temp.countGames++;
+
+					if (temp.countMoves == 0)
+						root = temp;
+					// System.out.println(temp);
+				}
+			}
+			if (terminal == -2) {
+				while (!pastTurns.empty()) {
+					MatrixBoard temp = pastTurns.pop();
+					if (white) {
+						if (temp.white)
+							temp.countLoses++;
+						else
+							temp.countWins++;
+
+					} else {
+						if (!temp.white)
+							temp.countLoses++;
+						else
+							temp.countWins++;
+					}
+					temp.countGames++;
+					if (temp.countMoves == 0)
+						root = temp;
+					// System.out.println(temp);
+				}
+			}
+			// for (MatrixBoard mb : pastTurns) {
+			// System.out.println("---------------------");
+			// System.out.println(mb);
+			// System.out.println("---------------------");
+			// }
+		}
+		return terminal;
+	}
+
+	public void startGame() {
+		startBoardEight();
 	}
 
 	private int getBestMove() {
@@ -339,12 +418,6 @@ public class MatrixBoard {
 		int randInt = rand.nextInt(nextTurns.size());
 		return randInt;
 	}
-
-	// public void initWhiteRoot()
-	// {
-	// white = true;
-	// nextTurns.add(new)
-	// }
 
 	private int[][] moveIJ(int fi, int fj, int ti, int tj) {
 		int[][] res = arrayCopy(board);
@@ -363,6 +436,8 @@ public class MatrixBoard {
 	}
 
 	private int[][] beatIJ(int fi, int fj, int mi, int mj, int ti, int tj) {
+		// countTurns++;
+		countFreeTurns = 0;
 		int[][] res = arrayCopy(board);
 		int temp = res[fi][fj];
 		res[fi][fj] = res[ti][tj];
@@ -375,10 +450,10 @@ public class MatrixBoard {
 		else
 			res[ti][tj] = temp;
 
-		if (temp > 0)
-			amountBlacks--;
-		else
-			amountWhites--;
+		// if (temp > 0)
+		// amountBlacks--;
+		// else
+		// amountWhites--;
 
 		res[mi][mj] = 0;
 
@@ -413,7 +488,7 @@ public class MatrixBoard {
 
 	@Override
 	public String toString() {
-		String ss = "Move#" + countTurns;
+		String ss = "Move#" + countMoves;
 		ss += "\nWHITE: " + white;
 		ss += "\nG: " + countGames;
 		ss += "\nW: " + countWins;

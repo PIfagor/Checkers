@@ -188,11 +188,44 @@ public class Tile  extends JPanel implements MouseListener {
 				makeBlackAndWhite();
 			}
 			
+			if  (board.endGame()==0){
+				board = board.getNextTurn();
+			}
+			
 			this.getParent().repaint();
-			board = board.getNextTurn();
-			//re
+			
+//			new Thread(new Runnable() {
+//				
+//				@Override
+//				public void run() {
+//					while(play())
+//					{
+//						try {
+//							Thread.sleep(200);
+//						} catch (InterruptedException e) {
+//							// TODO Auto-generated catch block
+//							e.printStackTrace();
+//						}
+//					}
+//					
+//				}
+//			}).run();
+			
+			
+			
 		}
-
+		
+		public boolean play()
+		{
+			if  (board.endGame()==0){
+				board = board.getNextTurn();
+				this.getParent().revalidate();
+				this.getParent().repaint();
+				
+				return true;
+			}
+			return false;
+		}
 
 		@Override
 		public void mouseReleased(MouseEvent arg0) {
