@@ -76,16 +76,33 @@ public class MatrixBoard implements Serializable {
 		return root;
 	}
 
-	public byte[][] getNextMoveTable() {
+	public void callMakeNextTurns()
+	{
 		if (nextTurns == null)
 			makeNextTurns();
-		return nextTurns.get(getBestMove()).BOARD();
+	}
+	
+	public byte[][] getNextMoveTable(int n) {
+		callMakeNextTurns();
+		countTurns++;
+		MatrixBoard turn = nextTurns.get(n);
+		pastTurns.push(turn);
+		countFreeTurns++;
+		return nextTurns.get(n).BOARD();
 
 	}
 
+	public MatrixBoard getUserMove(int n) {
+		callMakeNextTurns();
+		countTurns++;
+		MatrixBoard turn = nextTurns.get(n);
+		pastTurns.push(turn);
+		countFreeTurns++;
+		return nextTurns.get(n);
+
+	}
 	public MatrixBoard getNextTurn() {
-		if (nextTurns == null)
-			makeNextTurns();
+		callMakeNextTurns();
 
 		countTurns++;
 		MatrixBoard turn = nextTurns.get(getBestMove());
@@ -94,10 +111,12 @@ public class MatrixBoard implements Serializable {
 		return turn;
 
 	}
-
+	
+	
+	
+	
 	public int endGame() {
-		if (nextTurns == null)
-			makeNextTurns();
+		callMakeNextTurns();
 
 		if (countFreeTurns == CT.FREE_MOVES)
 			terminal = -1; // draw
@@ -182,19 +201,19 @@ public class MatrixBoard implements Serializable {
 		out.writeInt(loss);
 		byte[][] board = mb.board;
 		out.write(toOneArray(board));
-		int amountChildrens = 0;
+		int amountChildren = 0;
 
 		if (mb.nextTurns != null) {
-			amountChildrens = mb.nextTurns.size();
+			amountChildren = mb.nextTurns.size();
 			// System.out.print("*"+amountChildrens+ "*");
-			out.writeInt(amountChildrens);
+			out.writeInt(amountChildren);
 			for (MatrixBoard nt : mb.nextTurns) {
 				writeToFile(nt, out);
 			}
 			
 		} else {
 			// System.out.print("|"+amountChildrens+"|");
-			out.writeInt(amountChildrens);
+			out.writeInt(amountChildren);
 		}
 
 	}
@@ -211,11 +230,11 @@ public class MatrixBoard implements Serializable {
 		byte[] row = new byte[N * N];
 		in.read(row);
 		mb.board = toTwoAray(row);
-		int childrens = in.readInt();
+		int children = in.readInt();
 		//System.out.println(childrens);
-		if (childrens != 0) {
+		if (children != 0) {
 			mb.nextTurns = new ArrayList<>();
-			for (int i = 0; i < childrens; i++) {
+			for (int i = 0; i < children; i++) {
 				mb.nextTurns.add(readFromeFile(new MatrixBoard(), in));
 			}
 		}
@@ -499,7 +518,7 @@ public class MatrixBoard implements Serializable {
 	}
 
 	private byte[][] moveIJ(int fi, int fj, int ti, int tj) {
-		byte[][] res = arrayCopy(board);
+		byte[][] res = Utils.arrayCopy(board);
 		byte temp = res[fi][fj];
 		res[fi][fj] = res[ti][tj];
 
@@ -517,7 +536,7 @@ public class MatrixBoard implements Serializable {
 	private byte[][] beatIJ(int fi, int fj, int mi, int mj, int ti, int tj) {
 		// countTurns++;
 		countFreeTurns = 0;
-		byte[][] res = arrayCopy(board);
+		byte[][] res = Utils.arrayCopy(board);
 		byte temp = res[fi][fj];
 		res[fi][fj] = res[ti][tj];
 
@@ -550,23 +569,19 @@ public class MatrixBoard implements Serializable {
 		return true;
 	}
 
-	private byte[][] arrayCopy(byte[][] inBoard) {
-		int N = CT.SIZE_BOARD;
-		byte[][] result = new byte[N][N];
-		for (int i = 0; i < inBoard.length; i++)
-			for (int j = 0; j < inBoard.length; j++)
-				result[i][j] = inBoard[i][j];
-		return result;
-	}
+	
 
 	public void showNextMove() {
 		for (MatrixBoard mb : nextTurns) {
 			System.out.println(mb);
 		}
 	}
-
+	public ArrayList<MatrixBoard> getNextMove()
+	{
+		return nextTurns;
+	}
 	@Override
-	public String toString() {
+ 	public String toString() {
 		String ss = "Move#" + countMoves;
 		ss += "\nWHITE: " + white;
 		ss += "\nG: " + countGames;
