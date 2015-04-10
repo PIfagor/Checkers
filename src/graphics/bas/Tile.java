@@ -42,43 +42,6 @@ public class Tile extends JPanel implements MouseListener {
 	private static int tempJ;
 	private static Color lastColor;
 
-	private boolean isCanMove(byte [][] board) {
-		 game.callMakeNextTurns();
-		 ArrayList<MatrixBoard> nt = game.getNextMove();
-		 System.out.println("&&&&&&&&&&&&&&");
-		 Utils.showArray(board);
-		 System.out.println("&&&&&&&&&&&&&&");
-		 for (int i = 0 ; i < nt.size(); i++) {
-			 //Utils.showArray(nt.get(i).BOARD());
-			 if (Utils.arrayEquals(board, nt.get(i).BOARD()))
-			 {
-				 
-				 Utils.showArray(nt.get(i).BOARD());
-				 //this.board = Utils.arrayCopy();
-				 this.board = game.getUserMove(i).BOARD();	
-				 this.game = game.getUserMove(i);	
-				 return true;
-			 }
-				
-		 }
-		return false;
-	}
-
-	private void loadImages() {
-		try {
-			white = ImageIO.read(new File("resoursec/img/white.png"));
-			black = ImageIO.read(new File("resoursec/img/black.png"));
-			whiteKing = ImageIO.read(new File("resoursec/img/whiteKing.png"));
-			blackKing = ImageIO.read(new File("resoursec/img/blackKing.png"));
-			possMove = ImageIO.read(new File("resoursec/img/poss_move.png"));
-			enemyTile = ImageIO.read(new File("resoursec/img/enemy.png"));
-			currentTile = ImageIO.read(new File("resoursec/img/me.png"));
-
-		} catch (IOException ex) {
-			// handle exception...
-		}
-	}
-
 	public Tile() {
 
 		this.setSize(new Dimension(100, 100));
@@ -86,13 +49,24 @@ public class Tile extends JPanel implements MouseListener {
 
 		loadImages();
 		this.ID = currentID++;
-		game = new MatrixBoard();
-		game.initBoard(game);
-		board = Utils.arrayCopy(game.BOARD());
+		
 
 		addMouseListener(this);
 	}
-
+	
+	public void initTileFirst (MatrixBoard mb) {
+		game = mb;
+		game.initBoard(game);
+		board = Utils.arrayCopy(game.BOARD());
+	}
+	
+	public void initTile(MatrixBoard mb)
+	{
+		game = mb;
+		
+		board = Utils.arrayCopy(game.BOARD());
+	}
+	
 	public Tile(int i, int j) {
 		this();
 		I = i;
@@ -178,8 +152,6 @@ public class Tile extends JPanel implements MouseListener {
 
 	}
 
-	
-	
 	@Override
 	public void mousePressed(MouseEvent arg0) {
 
@@ -195,47 +167,53 @@ public class Tile extends JPanel implements MouseListener {
 				tempJ = J;
 				// this.setBackground(CS.LIME);
 				// this.drawImage(blackKing, 0, 0, null);
-				//showPosibleMove();
+				// showPosibleMove();
 
 			} else {
 				check = false;
-				byte [][] temp = Utils.arrayCopy(board);
+				byte[][] temp = Utils.arrayCopy(board);
 				int i = I;
 				int j = J;
 				byte t = temp[tempI][tempJ];
 				byte t2 = temp[i][j];
-				//neck for attack enimies
-				if ((tempI-I)%2 == 0 && (tempJ-J)%2 == 0)
-				{
-					int ix = (tempI+I)/2;
-					int jx = (tempJ+J)/2;
-					System.out.println("i:"+ix+" j:"+jx);
-					temp[ix][jx]=0;
+				// neck for attack enemies
+				if ((tempI - I) % 2 == 0 && (tempJ - J) % 2 == 0) {
+					int ix = (tempI + I) / 2;
+					int jx = (tempJ + J) / 2;
+					//System.out.println("i:" + ix + " j:" + jx);
+					temp[ix][jx] = 0;
 				}
+				// neck for kings
+				if (I == 0 && t == 1)
+					t = 2;
+				if (I == CT.SIZE_BOARD - 1 && t == -1)
+					t = -2;
 				temp[I][J] = t;
 				temp[tempI][tempJ] = t2;
-				
+
 				((Tile) this.getParent().getComponents()[fXYtID(tempI, tempJ)])
 						.makeBlackAndWhite();
 				makeBlackAndWhite();
 
-				if(isCanMove(temp))
-				{
+				if (isCanMove(temp)) {
 					makeMove = true;
 					this.getParent().repaint();
 				}
-					
-					
+
 			}
 			if (makeMove && game.endGame() == 0) {
-				game = game.getNextTurn();
-				board = game.BOARD();
-				
+				MatrixBoard temp = game.getNextTurn();
+				if (temp != null) {
+					game = temp;
+					board = game.BOARD();
+				}
+
 			}
-
+			System.out.println("********************");
+			game.showNextMove();
+			System.out.println("********************");
+			this.getParent().repaint();
 		}
-
-		this.getParent().repaint();
 
 		// new Thread(new Runnable() {
 		//
@@ -256,15 +234,43 @@ public class Tile extends JPanel implements MouseListener {
 
 	}
 
-	public boolean play() {
-		if (game.endGame() == 0) {
-			game = game.getNextTurn();
-			this.getParent().revalidate();
-			this.getParent().repaint();
-
+	private boolean isCanMove(byte[][] board) {
+		game.callMakeNextTurns();
+		if (game.isEnemyHit()||game.endGame()!=0)
 			return true;
+		ArrayList<MatrixBoard> nt = game.getNextMoves();
+		// System.out.println("&&&&&&&&&&&&&&");
+		// Utils.showArray(board);
+		// System.out.println("&&&&&&&&&&&&&&");
+		for (int i = 0; i < nt.size(); i++) {
+			// Utils.showArray(nt.get(i).BOARD());
+			if (Utils.arrayEquals(board, nt.get(i).BOARD())) {
+
+				//Utils.showArray(nt.get(i).BOARD());
+				// this.board = Utils.arrayCopy();
+				this.game = game.getUserMove(i);
+				this.board = game.BOARD();
+
+				return true;
+			}
+
 		}
 		return false;
+	}
+
+	private void loadImages() {
+		try {
+			white = ImageIO.read(new File("resoursec/img/white.png"));
+			black = ImageIO.read(new File("resoursec/img/black.png"));
+			whiteKing = ImageIO.read(new File("resoursec/img/whiteKing.png"));
+			blackKing = ImageIO.read(new File("resoursec/img/blackKing.png"));
+			possMove = ImageIO.read(new File("resoursec/img/poss_move.png"));
+			enemyTile = ImageIO.read(new File("resoursec/img/enemy.png"));
+			currentTile = ImageIO.read(new File("resoursec/img/me.png"));
+
+		} catch (IOException ex) {
+			// handle exception...
+		}
 	}
 
 	@Override
@@ -302,5 +308,5 @@ public class Tile extends JPanel implements MouseListener {
 		// TODO Auto-generated method stub
 
 	}
-	
+
 }

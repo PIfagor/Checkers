@@ -6,6 +6,8 @@ import graphics.bas.Tile;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
@@ -24,22 +26,39 @@ import java.io.ObjectOutputStream;
 import javax.swing.*;
 
 import constant.CT;
+import controler.Learning;
 import controler.MatrixBoard;
 
 public class Runer extends JFrame {
 	private BasJMenuBar mb;
 	private BasJPanel pn;
+	private JMenuItem newGame;
+	private JMenuItem restart;
+	private JMenuItem endGame;
+	private JMenuItem exitGame;
+
+	private MatrixBoard mainBoard;
 
 	private void initJMEnu() {
 		mb = new BasJMenuBar();
 		JMenu game = new JMenu("Game");
-		JMenuItem newGame = new JMenuItem("New Game");
-		JMenuItem restart = new JMenuItem("Restart");
+		newGame = new JMenuItem("New Game");
+		newGame.addActionListener(new MenuItemListener());
+		restart = new JMenuItem("Restart");
+		restart.addActionListener(new MenuItemListener());
+		endGame = new JMenuItem("End Game");
+		endGame.addActionListener(new MenuItemListener());
+		exitGame = new JMenuItem("Save & Exit Game");
+		exitGame.addActionListener(new MenuItemListener());
 		game.add(newGame);
 		game.add(restart);
+		game.add(endGame);
+		game.add(exitGame);
 		mb.add(game);
 		JMenu info = new JMenu("Info");
 		mb.add(info);
+		JMenuBar jn = new JMenuBar();
+
 		this.add(mb, BorderLayout.NORTH);
 	}
 
@@ -65,110 +84,80 @@ public class Runer extends JFrame {
 		super("Game");
 		initStandartDemision();
 		initJMEnu();
-		initGrid();
+		// gamePreparation ();
+		// initGrid();
+		// addMouseListener(this);
 	}
 
+	public class MenuItemListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (e.getSource() == newGame) {
+				// JOptionPane.showMessageDialog(null, "Selected Item: " +
+				// e.getActionCommand());
+
+				gamePreparation();
+				initGrid();
+
+			}
+			if (e.getSource() == endGame) {
+				savingDataAfterAllGames();
+				// initGrid();
+			}
+			if (e.getSource() == restart) {
+				// JOptionPane.showMessageDialog(null, "Selected Item: " +
+				// e.getActionCommand());
+				nextGame();
+				initGrid();
+
+			}
+			if (e.getSource() == exitGame) {
+				JOptionPane.showMessageDialog(null,
+						"Selected Item: " + e.getActionCommand());
+			}
+			pn.revalidate();
+		}
+
+	}
+
+	private void gamePreparation() {
+		try {
+			mainBoard = Learning.ReadTreeFromStorage(true, CT.mainFileName);
+			// mainBoard = new MatrixBoard();
+
+			new Tile().initTileFirst(mainBoard);
+		} catch (IOException e) {
+
+			e.printStackTrace();
+		}
+	}
+
+	private void nextGame() {
+		mainBoard.endGame();
+		mainBoard = mainBoard.getRoot();
+		System.out.println(mainBoard);
+		new Tile().initTile(mainBoard);
+	}
+
+	private void savingDataAfterAllGames() {
+		try {
+			mainBoard.writeToFile(mainBoard, new DataOutputStream(
+					new FileOutputStream(CT.mainFileName)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
 
 	public static void main(String[] args) throws IOException,
 			ClassNotFoundException {
-		 new Runer().setVisible(true);
-		//learning();
-
-	}
-	
-	//part of learning
-	public static void learning() throws FileNotFoundException, IOException {
-		String fileNamString = "random3k.txt";
-
-		boolean readFile = false;
-		boolean writeFile = false;
-
-		// inInint(temp,inFile,fileNamString);
-
-		long start = System.nanoTime();
-
-		MatrixBoard temp = ReadTreeFromStorage(readFile, fileNamString);
-
-		temp.initBoard(temp);
-
-		// ReadFromStorage(temp, outFile, fileNamString);
-
-		long end = System.nanoTime();
-		long time = (end - start) / 1000000;
-		System.out.println("END OF READ: " + time);
-
-		System.out.println(temp);
-
-		for (int i = 0; i < 3000; i++) {
-			while (temp.endGame() == 0) {
-				temp = temp.getNextTurn();
-				// System.out.println(temp);
-			}
-			// System.out.println("------------");
-			// System.out.println(temp);
-			temp = temp.getRoot();
-
-		}
-		System.out.println("______________________________________________");
-
-		System.out.println(temp);
-
-		temp.showNextMove();
-
-		start = System.nanoTime();
-		// writing to file
-		if (writeFile) {
-			temp.writeToFile(temp, new DataOutputStream(new FileOutputStream(
-					fileNamString)));
+		if (!CT.LEARNING) {
+			new Runer().setVisible(true);
+		} else {
+			Learning.learn();
 		}
 
-		// outInit(temp, outFile, fileNamString);
-		end = System.nanoTime();
-		time = (end - start) / 1000000;
-		System.out.println("END OF TIME: " + time);
-	}
-	
-	public static void WriteToStorage(MatrixBoard temp, boolean state,
-			String fileName) throws IOException, ClassNotFoundException {
-		if (state) {
-			FileInputStream fis = new FileInputStream(fileName);
-			ObjectInputStream ois = new ObjectInputStream(fis);
-			temp.initBoard((MatrixBoard) ois.readObject());
-			ois.close();
-		} else
-			temp.initBoard(temp);
-	}
-
-	public static void ReadFromStorage(MatrixBoard temp, boolean state,
-			String fileName) throws FileNotFoundException, IOException {
-		if (state) {
-			ObjectOutputStream out = null;
-			out = new ObjectOutputStream(new FileOutputStream(fileName));
-			out.writeObject(temp);
-			out.close();
-			// ObjectOutputStream out = null;
-			// ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			// out = new ObjectOutputStream(bos);
-			// out.writeObject(temp);
-			// byte[] data = bos.toByteArray();
-			// BufferedOutputStream boss = new BufferedOutputStream(new
-			// FileOutputStream(fileName),1024);
-			// boss.write(data);
-			// out.close();
-			// boss.close();
-		}
-
-	}
-
-	public static MatrixBoard ReadTreeFromStorage(boolean state, String fileName)
-			throws FileNotFoundException, IOException {
-		MatrixBoard res = new MatrixBoard();
-		if (state) {
-			res = res.readFromeFile(res, new DataInputStream(
-					new FileInputStream(fileName)));
-
-		}
-		return res;
 	}
 
 }
